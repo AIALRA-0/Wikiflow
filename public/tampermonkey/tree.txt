@@ -1,0 +1,15 @@
+wf-core-utils.js - 基础工具
+wf-thinking-advanced-mode.js - 思考时间：强制切到「进阶」
+wf-site-and-params.js - 站点与参数
+wf-reload-before-resend.js - reload-before-resend 支持
+wf-chatui-probes.js - ChatUI probes
+wf-compose-and-send.js - 填写 & 发送
+wf-strict-copy-via-copy-button.js - 严格复制：必须走官方“复制整条回复”流水线
+wf-dom-to-markdown-serializer.js - DOM 串联函数（保留以便将来拓展，但本版不会调用）
+wf-completion-check.js - 完成判定
+wf-strict-finalization-copy-only.js - 严格终止：只能用复制文本；失败即报错
+wf-error-and-auto-retry.js - 错误/掉线侦测 + 自动重试（不含 copy 失败）
+wf-window-close-report-beacon.js - 关窗上报：sendBeacon 版
+wf-window-close-wrapper.js - 统一：报告并尝试多次关闭当前窗口
+wf-window-close-hooks.js - 安装关窗上报钩子（替换原来的 pagehide 监听）
+wf-main-flow.js - 主流程

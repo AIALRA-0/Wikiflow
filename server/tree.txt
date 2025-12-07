@@ -1,0 +1,18 @@
+.
+├── server.js  // wikiflow server - 模块化入口
+├── server/
+│   ├── server.monolith.js.bak  // 原始单文件 server.js 备份
+│   ├── db.js                   // db.js - SQLite 初始化与 wf_slots / terms 等相关的数据库工具
+│   ├── security.js             // security.js - 会话鉴权、CSRF 与 Wiki Token 加解密
+│   ├── sse.js                  // sse.js - 负责 per-user slots 变化的 SSE 推送
+│   ├── wiki-utils.js           // wiki-utils.js - Wiki.js GraphQL 相关工具与标题/path 处理
+│   ├── wf-store.js             // wf-store.js - WF Relay 内存任务存储与轮转调度 & CORS
+│   ├── jobs.js                 // jobs.js - 内存中的 Wiki 提交任务队列（重启后丢失）
+│   ├── routes-auth.js          // routes-auth.js - 登录/登出、会话信息与用户 Wiki 设置
+│   ├── routes-terms.js         // routes-terms.js - 术语队列 terms 的增删查
+│   ├── routes-wiki.js          // routes-wiki.js - Wiki.js 查重/提交/读取页面相关 API
+│   ├── routes-jobs.js          // routes-jobs.js - Wiki 页面提交任务队列 jobs 相关 API
+│   ├── routes-wf.js            // routes-wf.js - WF Relay 父子页面通信相关 API
+│   └── routes-slots.js         // routes-slots.js - 生成队列 slots 列表、置顶与清理相关 API
+└── server-js/
+    └── wf-server-config.js     // 原有配置文件（环境变量 / 常量配置）

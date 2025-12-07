@@ -1,0 +1,428 @@
+<!doctype html>
+<!--!
+@file wikiflow 页面
+@brief 轻量级 Wiki.js 助手前端
+@section 目标
+提供名词模板生成 内容清洗 标签提取 Wiki 提交
+@section 结构
+头部资源加载 全局样式 页面主体 多个功能卡片 多个模态层 登录层 提示层
+-->
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>wikiflow · 轻量 Wiki.js 助手</title>
+
+  <!-- 站点自定义样式 -->
+  <link rel="stylesheet" href="./css/wikiflow.css" />
+
+  <!-- 外部样式与脚本, 数学公式 / 代码高亮 / XSS 清洗 -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css"
+  />
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/highlight.min.js"
+  ></script>
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+  ></script>
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  ></script>
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"
+  ></script>
+
+  <!-- marked 桥接 -->
+  <script type="module" src="./js/marked-bridge.mjs"></script>
+
+  <!-- 页面主逻辑 -->
+  <!-- <script defer src="./js/wikiflow.js?v=dev167"></script> -->
+  <script>
+    (function () {
+      const version = 'dev175'; // 统一版本号
+      const scripts = [
+        './js/wf-state.js',
+        './js/wf-utils.js',
+        './js/wf-api.js',
+        './js/wf-markdown-core.js',
+        './js/wf-markdown-editor.js',
+        './js/wf-popup-core.js',
+        './js/wf-slots-parallel-sync.js',
+        './js/wf-slots-scheduler.js',
+        './js/wf-slots-heartbeat.js',
+        './js/wf-slots-list-view.js',
+        './js/wf-slots-list-state.js',
+        './js/wf-slots-panel-ui.js',
+        './js/wf-jobs.js',
+        './js/wf-wiki.js',
+        './js/wf-bridge-ui.js',
+        './js/wf-batch-terms.js',
+        './js/wf-init.js'
+      ];
+
+      scripts.forEach(function (src) {
+        const scriptTag = document.createElement('script');
+        scriptTag.src = src + '?v=' + version;
+
+        // 关键：禁用 async，保证按 append 顺序执行
+        scriptTag.async = false;
+
+        // 不需要设置 defer，动态脚本上它基本没意义
+        document.head.appendChild(scriptTag);
+      });
+    })();
+  </script>
+
+</head>
+
+<body>
+<!--!
+@section 页面主体
+@brief 主功能区 卡片式布局 右侧自适应宽度
+-->
+<div class="wrap">
+  <main class="main">
+    <div class="right">
+      <!--! @section 顶部区域 @brief 用户信息 操作按钮 状态指示 -->
+      <div class="top">
+        <div class="line">
+          <div class="left">
+            <div class="userchip" id="userChip" title="当前登录用户" style="display:none;"></div>
+            <button id="btnLogout" class="btn ghost">退出</button>
+          </div>
+          <div class="right">
+            <button id="btnTheme" class="btn ghost">🌓 主题</button>
+            <button id="btnInstallBridge" class="btn ghost">🧩 安装/更新篡改猴</button>
+            <button id="btnTestBridge" class="btn ghost">🧪 测试篡改猴</button>
+            <button id="btnPopupHelp" class="btn ghost">📣 允许弹窗</button>
+            <button id="btnCoord" class="btn ghost">🚧 自动开窗：关</button>
+          </div>
+        </div>
+        <div class="line">
+          <div class="left">
+            <button id="btnSettings" class="btn sec">⚙️ 配置 Wiki.js API</button>
+          </div>
+          <div class="right statline">
+            <span class="pair"><span id="ledLogin" class="led"></span><span class="badge">登录</span></span>
+            <span class="pair"><span id="ledWiki" class="led"></span><span class="badge">Wiki API</span></span>
+            <span class="pair"><span id="ledBridge" class="led"></span><span class="badge">篡改猴</span></span>
+            <span class="pair"><span id="ledPopup" class="led"></span><span class="badge">弹窗</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!--! @section 名词生成卡片 @brief 输入名词 填充模板 提交生成 -->
+      <div class="card">
+        <div class="row">
+          <div class="row"><strong>知识点名词</strong></div>
+          <textarea id="termInput" class="box" placeholder="每行一个知识点，可批量提交，按回车换行" style="height: 90px;"></textarea>
+          <div class="muted" style="margin-top:6px;">生成时会自动把当前名词替换到模板中的 {名词}；可用“编辑模板”保存自定义模板（必须包含 {名词}）</div>
+          <div class="row">
+            <button id="btnTestGpt" class="btn">提交生成</button>
+            <button id="btnEditTpl" class="btn sec">编辑模板</button>
+            <!--<button id="btnSyncTpl" class="btn ghost">同步模板</button> -->
+          </div>
+        </div>
+        <div id="addMsg" class="smallmsg"></div>
+      </div>
+
+      <!--! @section 生成队列 @brief 展示生成任务状态 支持清理与重试指示 -->
+      <div class="card" id="genCard">
+        <div class="row" style="justify-content:space-between; width:100%;">
+          <div class="row">
+            <strong>生成队列</strong>
+            <span style="display: inline-flex; align-items: center; gap: 12px;">
+              <span class="statline muted" style="gap:10px;">
+                <span class="pair"><span class="led warn pulse"></span> 进行中</span>
+                <span class="pair"><span class="led queue"></span> 排队中</span>
+                <span class="pair"><span class="led retry"></span> 重试</span>
+                <span class="pair"><span class="led ok"></span> 完成</span>
+                <span class="pair"><span class="led err"></span> 异常</span>
+              </span>
+            </span>
+          </div>
+          <div class="row" style="gap:10px;">
+            <!-- 新增：并行上限选择器 -->
+            <label class="muted" for="selParallel">并行上限</label>
+            <select id="selParallel" class="sel">
+              <!-- 0~8 -->
+              <option value="0">0（暂停放行）</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4" selected>4（默认）</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+            </select>
+
+
+          
+            <button id="btnGenClearDone" class="btn sec">清除已完成</button>
+            <button id="btnGenClearUnfinished" class="btn ghost">清除未完成</button>
+            <button id="btnGenClearAll" class="btn ghost">清除全部</button>
+          </div>
+        </div>
+        <div id="genList" class="queue" style="margin-top:10px;"></div>
+      </div>
+
+      <!-- 归档区卡片（生成队列下方，Markdown 上方） -->
+      <div class="card" id="archiveCard">
+        <div class="row" style="justify-content:space-between; width:100%;">
+          <div class="row">
+            <strong>归档区</strong>
+            <span class="muted">只展示你手动从生成队列归档的“已完成”条目</span>
+          </div>
+          <div class="row">
+            <button id="btnArchiveClear" class="btn ghost">清空归档</button>
+          </div>
+        </div>
+        <div id="archiveList" class="queue" style="margin-top:10px;"></div>
+      </div>
+
+      <div id="slotMini" class="slot-mini" style="display:none;" aria-live="polite">
+        <div class="head">
+          <span>并发占用</span>
+          <strong id="slotMiniNum" style="font-size:12px;">0/0</strong>
+        </div>
+        <div id="slotMiniCells" class="cells" aria-label="并发槽位可视化"></div>
+        <div id="slotMiniMeta" class="meta">队列 0</div>
+      </div>
+
+      <!--! @section Markdown 编辑与预览 @brief 并排布局 实时渲染 清洗入口 -->
+      <div class="card">
+        <div class="row"><strong>Markdown</strong></div>
+        <div class="muted smallmsg">将自动：提取标签（分隔符“；/，”），删除首行标签行，替换所有“。”为“；”，去掉所有【】内内容</div>
+        <div class="split" id="mdSplit">
+          <div class="pane">
+            <textarea id="mdInput" class="box" placeholder="wiki内容 ..."></textarea>
+          </div>
+          <div class="pane">
+            <div id="liveHtml" class="box"></div>
+          </div>
+        </div>
+        <div class="row">
+          <button id="btnParse" class="btn sec">手动解析标签并清洗</button>
+        </div>
+        <div id="parseMsg" class="smallmsg"></div>
+      </div>
+
+      <!--! @section 页面描述 @brief 自动填充英文全称 展示标签集合 -->
+      <div class="card">
+        <div class="titlebar"><strong>页面描述</strong></div>
+        <div class="stack">
+          <input id="descInput" placeholder="用于 Wiki 页面 description（解析 Markdown 将自动填充）">
+          <div class="muted smallmsg">解析 Markdown 时会自动将“英文全称”填入这里；下方显示自动提取的标签</div>
+          <div id="tags" class="chips"></div>
+        </div>
+      </div>
+
+      <!--! @section 页面主标题 @brief 用于页面路径与重复校验 -->
+      <div class="card">
+        <div class="titlebar"><strong>填写页面主标题</strong></div>
+        <div class="stack">
+          <input id="titleInput" placeholder="主标题（将用于页面路径 /slug）">
+        </div>
+      </div>
+
+      <!--! @section 提交区域 @brief 提交到 Wiki.js 支持打开页面 开启去重提示 -->
+      <div class="card">
+        <div class="titlebar"><strong>提交到 Wiki.js</strong></div>
+        <div class="stack">
+          <div class="row">
+            <button id="btnSubmit" class="btn">提交</button>
+            <span class="muted">将检测重复标题/相似项，必要时提示覆盖 / 修改 / 跳过</span>
+          </div>
+          <div class="row" style="align-items:center; justify-content:space-between;">
+            <span class="muted">提交成功后自动打开目标 Wiki 页面</span>
+            <label class="switch">
+              <input id="ckOpen" type="checkbox">
+              <i class="slider"></i>
+            </label>
+          </div>
+          <!-- 新增：自动清理当前预览的生成队列条目 -->
+          <div class="row" style="align-items:center; justify-content:space-between; margin-top:6px;">
+            <span class="muted">提交成功后自动清理当前预览的生成队列条目</span>
+            <label class="switch">
+              <input id="ckAutoClearSlot" type="checkbox">
+              <i class="slider"></i>
+            </label>
+          </div>
+          <div id="result" class="muted"></div>
+        </div>
+      </div>
+
+
+      <!--! @section 提交队列 @brief 展示提交任务 批量清理 -->
+      <div class="card" id="jobsCard">
+        <div class="row" style="justify-content:space-between; width:100%;">
+          <div class="row">
+            <strong>提交队列</strong>
+            <span class="muted"></span>
+          </div>
+          <div class="row">
+            <button id="btnClearDone" class="btn sec">清除已完成</button>
+            <button id="btnClearAll" class="btn ghost">清除全部</button>
+          </div>
+        </div>
+        <div id="jobList" class="queue jobs" style="margin-top:10px;"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!--! @section 模态 设置 @brief 配置 Wiki 接口地址 Token 语言 编辑器 -->
+<div class="modal" id="dlgSettings">
+  <div class="win">
+    <div class="row" style="justify-content:space-between;">
+      <h3>Wiki.js API 配置</h3>
+      <button class="x" data-x="dlgSettings">✕</button>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <input id="inpBase" placeholder="Wiki 基地址（例如：http://127.0.0.1:3000）">
+      <input id="inpGraphql" placeholder="GraphQL 端点（例如：http://127.0.0.1:3000/graphql）">
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <input id="inpToken" placeholder="API Token（仅服务器保存，加密存储）">
+      <input id="inpLocale" placeholder="语言（默认 zh）">
+      <input id="inpEditor" placeholder="编辑器（默认 markdown）">
+    </div>
+    <div class="row" style="margin-top:12px;">
+      <button id="btnSaveSettings" class="btn">保存</button>
+      <span class="muted">Token 从 Wiki.js 管理后台「API Access」获取；GraphQL 端点通常为 /graphql<a class="link" target="_blank" href="https://docs.requarks.io/dev/api">文档</a></span>
+    </div>
+  </div>
+</div>
+
+<!--! @section 模态 模板编辑 @brief 编辑并保存名词模板 支持占位符替换 -->
+<div class="modal" id="dlgTpl">
+  <div class="win">
+    <div class="row" style="justify-content:space-between;">
+      <h3>模板编辑</h3>
+      <button class="x" data-x="dlgTpl">✕</button>
+    </div>
+    <textarea id="tplArea"></textarea>
+    <div class="row" style="margin-top:10px;">
+      <button id="btnSaveTpl" class="btn">保存模板</button>
+      <span class="muted">模板必须包含占位符 {名词}；保存后，生成时会自动用当前名词替换 {名词}</span>
+    </div>
+  </div>
+</div>
+
+<!--! @section 模态 重复项提示 @brief 检测相似页面 支持覆盖 修改 跳过 -->
+<div class="modal" id="dlgDup">
+  <div class="win">
+    <div class="row" style="justify-content:space-between;">
+      <h3>检测到可能重复/相似页面</h3>
+      <button class="x" data-x="dlgDup">✕</button>
+    </div>
+    <div id="dupList" class="muted" style="margin:8px 0;"></div>
+    <div class="row" style="margin-top:8px;">
+      <button id="btnForce" class="btn warn">坚持提交</button>
+      <button id="btnOverwrite" class="btn">覆盖所选</button>
+      <button id="btnModify" class="btn sec">我去改标题</button>
+      <button id="btnSkip" class="btn ghost">跳过不提交</button>
+    </div>
+  </div>
+</div>
+
+<!--! @section 登录层 @brief 受限访问 用户名与密码输入 -->
+<div class="login" id="dlgLogin">
+  <div class="win" style="max-width:420px;">
+    <div class="row" style="justify-content:space-between; align-items:center;">
+      <h3>登录</h3>
+      <span class="muted">仅登录用户可访问</span>
+    </div>
+    <form id="loginForm" onsubmit="return false;">
+      <div class="row" style="margin-top:8px;">
+        <input id="inpUser" name="username" placeholder="用户名" autocomplete="username">
+        <input id="inpPass" name="password" type="password" placeholder="密码" autocomplete="current-password">
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <button id="btnLogin" class="btn" type="submit">登录</button>
+        <span class="muted">如无用户，见部署说明添加</span>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+<!--! @section 提示层 @brief 统一弹窗文本与确认按钮 -->
+<div id="toast" class="toast"></div>
+
+<div class="modal" id="dlgAlert">
+  <div class="win" style="max-width:520px;">
+    <h3 id="alertTitle" style="margin:6px 0 8px;">提示</h3>
+    <div id="alertMsg" style="margin-top:4px;"></div>
+    <div class="row" style="margin-top:14px; justify-content:flex-end;">
+      <button id="btnAlertOK" class="btn">好的</button>
+    </div>
+  </div>
+</div>
+
+<!-- 再新增一个你的 modal，就放在这里 -->
+<div class="modal" id="dlgTermDup">
+  <div class="win" style="max-width:640px;">
+    <div class="row" style="justify-content:space-between; align-items:center;">
+      <h3>检测到疑似重复的词条</h3>
+      <button class="x" data-x="dlgTermDup">✕</button>
+    </div>
+
+    <div class="muted" style="margin:8px 0 10px;">
+      下列新词条在 Wiki 中检测到可能已有的页面，请确认是否继续生成：
+    </div>
+
+    <!-- JS 里用到的容器：renderTermDupList 会往这里塞内容 -->
+    <div id="termDupList" class="stack" style="max-height:260px; overflow:auto; border:1px solid var(--border-subtle); padding:8px; border-radius:6px;">
+      <!-- JS 渲染内容 -->
+    </div>
+
+    <div class="muted" style="margin:10px 0 4px;">
+      你可以在下面编辑本次要提交的词条（每行一个）。删除不想生成的条目，再点击“继续生成”：
+    </div>
+    <textarea
+      id="termDupEditInput"
+      class="mono"
+      style="width:100%; min-height:120px; resize:vertical; font-size:13px; padding:6px 8px; box-sizing:border-box;"
+      placeholder="每行一个词条，例如：&#10;RISC-V 指令集&#10;时钟树综合"
+    ></textarea>
+
+    <div class="row" style="margin-top:12px; justify-content:flex-end; gap:10px;">
+      <button id="btnTermDupCancel" class="btn ghost">取消生成</button>
+      <button id="btnTermDupConfirm" class="btn warn">继续生成</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
+
+<!-- 新增：弹窗权限说明 -->
+<div class="modal" id="dlgPopup">
+  <div class="win" style="max-width:560px;">
+    <h3 style="margin:6px 0 8px;">需要允许弹窗</h3>
+    <div class="stack">
+      <div class="muted">本站需要在新窗口中打开 ChatGPT 才能正常生成内容。请在浏览器地址栏的提示中选择 <strong>允许弹窗/始终允许</strong>，或为本站解除拦截。</div>
+      <div class="muted">你也可以点下面的“立即测试”触发浏览器的弹窗提示。</div>
+      <div class="row" style="margin-top:10px;">
+        <button id="btnPopupTest" class="btn">立即测试</button>
+        <button class="x" data-x="dlgPopup">✕</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</body>
+</html>

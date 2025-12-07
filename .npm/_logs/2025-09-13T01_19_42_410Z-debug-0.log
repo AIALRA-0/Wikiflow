@@ -1,0 +1,89 @@
+0 verbose cli /usr/bin/node /usr/bin/npm
+1 info using npm@10.9.3
+2 info using node@v22.19.0
+3 silly config load:file:/usr/lib/node_modules/npm/npmrc
+4 silly config load:file:/home/ubuntu/wikiflow/.npmrc
+5 verbose config error loading project config Error: EACCES: permission denied, open '/home/ubuntu/wikiflow/.npmrc'
+5 verbose config     at async open (node:internal/fs/promises:641:25)
+5 verbose config     at async readFile (node:internal/fs/promises:1245:14)
+5 verbose config     at async #loadFile (/usr/lib/node_modules/npm/node_modules/@npmcli/config/lib/index.js:589:5)
+5 verbose config     at async Config.load (/usr/lib/node_modules/npm/node_modules/@npmcli/config/lib/index.js:247:5)
+5 verbose config     at async #load (/usr/lib/node_modules/npm/lib/npm.js:98:5)
+5 verbose config     at async Npm.load (/usr/lib/node_modules/npm/lib/npm.js:80:14)
+5 verbose config     at async module.exports (/usr/lib/node_modules/npm/lib/cli/entry.js:42:37) {
+5 verbose config   errno: -13,
+5 verbose config   code: 'EACCES',
+5 verbose config   syscall: 'open',
+5 verbose config   path: '/home/ubuntu/wikiflow/.npmrc'
+5 verbose config }
+6 silly config load:file:/opt/wikiflow/.npmrc
+7 silly config load:file:/usr/etc/npmrc
+8 verbose title npm ci
+9 verbose argv "ci" "--omit" "dev"
+10 verbose logfile logs-max:10 dir:/opt/wikiflow/.npm/_logs/2025-09-13T01_19_42_410Z-
+11 verbose logfile /opt/wikiflow/.npm/_logs/2025-09-13T01_19_42_410Z-debug-0.log
+12 silly logfile done cleaning log files
+13 silly packumentCache heap:492044288 maxSize:123011072 maxEntrySize:61505536
+14 verbose shrinkwrap failed to load /home/ubuntu/wikiflow EACCES: permission denied, open '/home/ubuntu/wikiflow/npm-shrinkwrap.json'
+15 verbose loadVirtual Error: loadVirtual requires existing shrinkwrap file
+15 verbose loadVirtual     at Arborist.loadVirtual (/usr/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/load-virtual.js:51:18)
+15 verbose loadVirtual     at async CI.exec (/usr/lib/node_modules/npm/lib/commands/ci.js:49:5)
+15 verbose loadVirtual     at async Npm.exec (/usr/lib/node_modules/npm/lib/npm.js:207:9)
+15 verbose loadVirtual     at async module.exports (/usr/lib/node_modules/npm/lib/cli/entry.js:74:5)
+16 verbose stack Error: 
+16 verbose stack The `npm ci` command can only install with an existing package-lock.json or
+16 verbose stack npm-shrinkwrap.json with lockfileVersion >= 1. Run an install with npm@5 or
+16 verbose stack later to generate a package-lock.json file, then try again.
+16 verbose stack
+16 verbose stack Clean install a project
+16 verbose stack
+16 verbose stack Usage:
+16 verbose stack npm ci
+16 verbose stack
+16 verbose stack Options:
+16 verbose stack [--install-strategy <hoisted|nested|shallow|linked>] [--legacy-bundling]
+16 verbose stack [--global-style] [--omit <dev|optional|peer> [--omit <dev|optional|peer> ...]]
+16 verbose stack [--include <prod|dev|optional|peer> [--include <prod|dev|optional|peer> ...]]
+16 verbose stack [--strict-peer-deps] [--foreground-scripts] [--ignore-scripts] [--no-audit]
+16 verbose stack [--no-bin-links] [--no-fund] [--dry-run]
+16 verbose stack [-w|--workspace <workspace-name> [-w|--workspace <workspace-name> ...]]
+16 verbose stack [-ws|--workspaces] [--include-workspace-root] [--install-links]
+16 verbose stack
+16 verbose stack aliases: clean-install, ic, install-clean, isntall-clean
+16 verbose stack
+16 verbose stack Run "npm help ci" for more info
+16 verbose stack     at CI.usageError (/usr/lib/node_modules/npm/lib/base-cmd.js:111:26)
+16 verbose stack     at /usr/lib/node_modules/npm/lib/commands/ci.js:55:18
+16 verbose stack     at async CI.exec (/usr/lib/node_modules/npm/lib/commands/ci.js:49:5)
+16 verbose stack     at async Npm.exec (/usr/lib/node_modules/npm/lib/npm.js:207:9)
+16 verbose stack     at async module.exports (/usr/lib/node_modules/npm/lib/cli/entry.js:74:5)
+17 error code EUSAGE
+18 error
+18 error The `npm ci` command can only install with an existing package-lock.json or
+18 error npm-shrinkwrap.json with lockfileVersion >= 1. Run an install with npm@5 or
+18 error later to generate a package-lock.json file, then try again.
+18 error
+18 error Clean install a project
+18 error
+18 error Usage:
+18 error npm ci
+18 error
+18 error Options:
+18 error [--install-strategy <hoisted|nested|shallow|linked>] [--legacy-bundling]
+18 error [--global-style] [--omit <dev|optional|peer> [--omit <dev|optional|peer> ...]]
+18 error [--include <prod|dev|optional|peer> [--include <prod|dev|optional|peer> ...]]
+18 error [--strict-peer-deps] [--foreground-scripts] [--ignore-scripts] [--no-audit]
+18 error [--no-bin-links] [--no-fund] [--dry-run]
+18 error [-w|--workspace <workspace-name> [-w|--workspace <workspace-name> ...]]
+18 error [-ws|--workspaces] [--include-workspace-root] [--install-links]
+18 error
+18 error aliases: clean-install, ic, install-clean, isntall-clean
+18 error
+18 error Run "npm help ci" for more info
+19 verbose cwd /home/ubuntu/wikiflow
+20 verbose os Linux 6.8.0-1036-aws
+21 verbose node v22.19.0
+22 verbose npm  v10.9.3
+23 verbose exit 1
+24 verbose code 1
+25 error A complete log of this run can be found in: /opt/wikiflow/.npm/_logs/2025-09-13T01_19_42_410Z-debug-0.log

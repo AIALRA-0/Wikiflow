@@ -1,0 +1,17 @@
+./js/
+  wf-state.js                  // 全局 window.__wf* 状态与常量：冷却/阈值/超时等基础配置与初始值
+  wf-utils.js                  // 工具函数库：$, $$, delay, esc, showAlert、openModal/closeModal 等与业务无关的小工具
+  wf-api.js                    // HTTP 封装层：api() 请求助手 + slots/wiki 等 REST 接口调用与错误处理
+  wf-markdown-editor.js        // Markdown 编辑 & 预览：提取标签/元信息、normalizeMath、renderLivePreview、loadSlotIntoEditor 等
+  wf-popup-core.js             // 弹窗核心：openChildForToken / openCopyOnlyWindow / allocPopupPos / 槽位坐标记录与关闭窗口工具
+  wf-slots-parallel-sync.js    // 并行上限 & 跨页同步：get/setParallelLimit + BroadcastChannel/storage 同步 + 模板/归档同步与触发调度
+  wf-slots-scheduler.js        // 槽位排序 & 调度引擎：ensureOrder/sortItemsForDisplay + computeActiveSet/capacity + rescueLaunch/requeueSlotAsNew/scheduleLaunches + markSlotState
+  wf-slots-heartbeat.js        // 心跳与超时监控：updateHBUIFromServer + HB 超时 watchdog + genTimeout → timeout-copy + copy-only 恢复/重开与本地心跳状态 reset
+  wf-slots-list-view.js        // 生成队列 UI：slotRow 行渲染、updateArchiveUI、loadGenList 轮询刷新、renderSlotMini 小窗占用格子与 LED 状态
+  wf-slots-list-state.js       // 列表状态管理：currentTags/currentPreviewToken、__wfArchivedTokens/__wfSlotsSnapshot、归档集合 load/save、本地查询 getSlotByToken
+  wf-slots-panel-ui.js         // 面板交互层：handleSlotListClick（预览/归档/还原/删除/focus）、safeBatchDelete & 清理按钮、归档清空按钮、selParallel 变化与 visibility/focus 自动刷新
+  wf-jobs.js                   // 作业列表页面：jobRow 渲染、trackJob、loadJobs、jobTimers、jobs 清理按钮与后端 /api/jobs/** 交互
+  wf-wiki.js                   // Wiki 相关：validateAndBuildPath、模板读写、查重弹窗、提交/覆盖/坚持提交等与 wiki 页面的桥接逻辑
+  wf-bridge-ui.js              // Bridge UI 与运行模式：登录/登出、session 显示、bridge LED/popup LED、isCoordOnly、篡改猴安装/测试、window.open & 链接拦截
+  wf-batch-terms.js            // 批量术语队列：startGptRunAndSubmit、批量队列查重、termDup 对话框与和 slots 的对接
+  wf-init.js                   // 入口初始化：按顺序拉起各模块 init（并行同步、队列轮询、心跳、jobs、wiki 等）并绑定全局事件
