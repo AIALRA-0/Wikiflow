@@ -9,11 +9,11 @@ A lightweight workflow system that integrates with **ChatGPT** to automatically 
 ## Features
 
 - 🚀 **Automated Wiki generation** — From keyword input to complete Wiki pages.
-- 🧠 **ChatGPT-powered refinement** — Uses OpenAI’s API for structured content output.
+- 🧠 **ChatGPT-powered refinement** — Automates the ChatGPT web interface via Tampermonkey scripts, instead of calling the OpenAI API.
 - 🧩 **Seamless Wiki.js integration** — Submits content directly via Wiki.js GraphQL API.
 - 🔄 **Parallel slot scheduling** — Runs multiple ChatGPT tasks concurrently.
 - 💾 **Archiving & recovery system** — Handles timeout, retries, and error recovery automatically.
-- 🧰 **Tampermonkey bridge** — Adds enhanced ChatGPT popup and monitoring for end-users.
+- 🧰 **Tampermonkey bridge** — Controls the ChatGPT web UI, adds enhanced popup and monitoring for end-users.
 
 # Gallery
 
