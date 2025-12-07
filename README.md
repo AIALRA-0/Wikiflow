@@ -3,6 +3,7 @@
 A lightweight workflow system that integrates with **ChatGPT** to automatically generate, refine, and publish structured Wiki content to **Wiki.js**.
 
 👉 **Live Demo / Production:** [wikiflow.aialra.online](https://wikiflow.aialra.online)
+
 👉 **Generation Template:** [wiki.aialra.online](https://wiki.aialra.online/zh/(root))
 
 ## Features
