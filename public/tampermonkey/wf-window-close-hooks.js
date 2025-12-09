@@ -34,8 +34,8 @@ async function autoRetry(reason, promptText) {
 
   // ① 对某些 reason 完全不重试，直接报错
   const NO_RETRY_REASONS = new Set([
-    'copy-failed',
-    'copy-after-marker-failed',
+    // 'copy-failed',
+    // 'copy-after-marker-failed',
     // 以后你要新增“只报错不重试”的 reason 也可以继续往里加
   ]);
 
