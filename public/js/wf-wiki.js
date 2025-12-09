@@ -219,6 +219,20 @@ async function promptSyncTemplate(){
   try {
     localStorage.setItem('wf_template', content);
     broadcastTemplate(content);      // 🔁 模板同步到其他标签页
+
+    (async () => {
+      try {
+        await fetch('/api/wf/config-broadcast', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ template: content }),
+        });
+      } catch (e) {
+        console.warn('[wf] broadcast template failed', e);
+      }
+    })();
+
   } catch {}
 
   // 若模板编辑窗已开，顺便写入 textarea（本页）
@@ -321,6 +335,18 @@ $("#btnSaveTpl").onclick = ()=>{
   try {
     localStorage.setItem('wf_template', t);
     broadcastTemplate(t);          // 🔁 通知所有其他页面
+    (async () => {
+      try {
+        await fetch('/api/wf/config-broadcast', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ template: t }),
+        });
+      } catch (e) {
+        console.warn('[wf] broadcast template failed', e);
+      }
+    })();
     showAlert('模板已保存','成功');
   } catch(e){
     showAlert('保存失败（浏览器可能禁用了本地存储）','失败');

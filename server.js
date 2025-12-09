@@ -52,6 +52,8 @@ const { registerJobRoutes }   = require('./server/routes-jobs');
 const { registerWfRoutes }    = require('./server/routes-wf');
 const { registerSlotRoutes }  = require('./server/routes-slots');
 const { registerSseRoute }    = require('./server/sse');
+const { registerWfConfig } = require('./server/wf-config');
+
 
 // ---------- 创建 App ----------
 const app = express();
@@ -129,6 +131,7 @@ registerWikiRoutes(app); // Wiki.js 相关接口
 registerJobRoutes(app);  // 后台 jobs 队列
 registerWfRoutes(app);   // WF Relay 父子页通信
 registerSlotRoutes(app); // slots 队列管理
+registerWfConfig(app);
 
 // 兜底 404（API）
 app.use('/api/', (req, res) => res.status(404).json({ ok: false, error: 'API_NOT_FOUND' }));

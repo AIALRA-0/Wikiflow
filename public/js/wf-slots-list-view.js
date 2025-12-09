@@ -415,10 +415,49 @@ async function loadGenList() {
   }
 }
 
+
 // === [SSE] 实时同步 slots 变更（手机提交→电脑秒刷） ===
 function connectSlotsSSE() {
   if (window.__esSlots) return; // 单例
   try {
+    function handleWfConfig(ev) {
+      let data = {};
+      try {
+        data = JSON.parse(ev.data || '{}');
+      } catch (e) {
+        console.warn('[wf] parse wf-config failed', ev.data);
+        return;
+      }
+    
+      // 并行上限：silent = true，避免再触发广播 & POST
+      if (typeof data.parallelLimit === 'number') {
+        setParallelLimit(data.parallelLimit, { silent: true });
+      
+        // 收到新的并行上限后，重排一下队列（跟 BroadcastChannel 分支保持一致）
+        (async () => {
+          try {
+            const r = await api('/api/slots', 'GET');
+            ensureOrder(r.items || []);
+            await scheduleLaunches(r.items || []);
+            updateActiveWindowsIndicator(r.items || []);
+          } catch (e) {
+            console.warn('[wf] refresh slots after parallelLimit update failed', e);
+          }
+        })();
+      }
+    
+      // 模板
+      if (typeof data.template === 'string') {
+        const tpl = data.template;
+        try {
+          localStorage.setItem('wf_template', tpl);
+        } catch (_) {}
+      
+        const ta = document.getElementById('tplArea');
+        if (ta) ta.value = tpl;
+      }
+    }
+
     const es = new EventSource('/api/slots/stream', { withCredentials: true });
     window.__esSlots = es;
 
@@ -431,6 +470,8 @@ function connectSlotsSSE() {
         await updateActiveWindowsIndicator(); // ✅ 同步刷新小窗
       } catch {}
     });
+
+    es.addEventListener('wf-config', handleWfConfig);
 
     es.onerror = () => {
       try {

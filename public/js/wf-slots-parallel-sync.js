@@ -14,6 +14,8 @@ function getParallelLimit() {
   return Math.max(0, Math.min(8, v));
 }
 
+// 并行上限 & 跨页同步：管理 wf_parallel_limit + BroadcastChannel/localStorage 同步模板与归档
+
 // 替换原来的 setParallelLimit：支持静默更新，避免跨页广播互相打架
 function setParallelLimit(n, { silent = false } = {}) {
   const v = Math.max(0, Math.min(8, Number(n) || 0));
@@ -25,8 +27,23 @@ function setParallelLimit(n, { silent = false } = {}) {
   // 默认会通过 BroadcastChannel 推给其他标签页
   if (!silent) {
     broadcastParallelLimit(v);
+
+    // ☆ 新增：通知后端做 SSE 广播（跨浏览器 / 设备）
+    (async () => {
+      try {
+        await fetch('/api/wf/config-broadcast', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ parallelLimit: v }),
+        });
+      } catch (e) {
+        console.warn('[wf] broadcast parallelLimit failed', e);
+      }
+    })();
   }
 }
+
 
 function broadcastParallelLimit(v){
   try { if (__parChan) __parChan.postMessage({ type:'parallel', value:Number(v)||0 }); } catch {}
